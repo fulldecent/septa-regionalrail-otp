@@ -1,0 +1,97 @@
+CREATE TABLE agency (
+  agency_id TEXT,
+  agency_name TEXT,
+  agency_url TEXT,
+  agency_timezone TEXT,
+  agency_lang TEXT,
+  agency_phone TEXT
+);
+CREATE TABLE calendar (
+  service_id TEXT,
+  monday NUMERIC,
+  tuesday NUMERIC,
+  wednesday NUMERIC,
+  thursday NUMERIC,
+  friday NUMERIC,
+  saturday NUMERIC,
+  sunday NUMERIC,
+  start_date NUMERIC,
+  end_date NUMERIC
+);
+CREATE TABLE calendar_dates (
+  service_id TEXT,
+  date NUMERIC,
+  exception_type NUMERIC
+);
+CREATE TABLE routes (
+  route_id TEXT,
+  agency_id TEXT,
+  route_short_name TEXT,
+  route_long_name TEXT,
+  route_desc TEXT,
+  route_type NUMERIC,
+  route_url TEXT,
+  route_color TEXT,
+  route_text_color TEXT
+);
+CREATE TABLE shapes (
+  shape_id TEXT,
+  shape_pt_lat REAL,
+  shape_pt_lon REAL,
+  shape_pt_sequence NUMERIC)
+;
+CREATE TABLE stops (
+  stop_id TEXT,
+  stop_code TEXT,
+  stop_name TEXT,
+  stop_desc TEXT,
+  stop_lat REAL,
+  stop_lon REAL,
+  zone_id NUMERIC,
+  stop_url TEXT,
+  timepoint NUMERIC
+);
+CREATE TABLE stop_times (
+  trip_id TEXT,
+  arrival_time TEXT,
+  departure_time TEXT,
+  stop_id TEXT,
+  stop_sequence NUMERIC,
+  stop_headsign TEXT,
+  pickup_type NUMERIC,
+  drop_off_type NUMERIC
+);
+CREATE TABLE trips (
+  route_id TEXT,
+  service_id TEXT,
+  trip_id TEXT,
+  trip_headsign TEXT,
+  direction_id NUMERIC,
+  block_id TEXT,
+  shape_id TEXT
+);
+.mode csv
+.import ./tmp/agency.txt agencyTMP
+.import ./tmp/calendar.txt calendarTMP
+.import ./tmp/calendar_dates.txt calendar_datesTMP
+.import ./tmp/routes.txt routesTMP
+.import ./tmp/shapes.txt shapesTMP
+.import ./tmp/stops.txt stopsTMP
+.import ./tmp/stop_times.txt stop_timesTMP
+.import ./tmp/trips.txt tripsTMP
+INSERT INTO agency SELECT * FROM agencyTMP;
+INSERT INTO calendar SELECT * FROM calendarTMP;
+INSERT INTO calendar_dates SELECT * FROM calendar_datesTMP;
+INSERT INTO routes SELECT * FROM routesTMP;
+INSERT INTO shapes SELECT * FROM shapesTMP;
+INSERT INTO stops SELECT * FROM stopsTMP;
+INSERT INTO stop_times SELECT * FROM stop_timesTMP;
+INSERT INTO trips SELECT * FROM tripsTMP;
+DROP TABLE agencyTMP;
+DROP TABLE calendarTMP;
+DROP TABLE calendar_datesTMP;
+DROP TABLE routesTMP;
+DROP TABLE shapesTMP;
+DROP TABLE stopsTMP;
+DROP TABLE stop_timesTMP;
+DROP TABLE tripsTMP;
