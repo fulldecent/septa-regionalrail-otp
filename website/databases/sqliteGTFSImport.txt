@@ -9,14 +9,14 @@
 --
 
 CREATE TABLE agency (
-  agency_id TEXT,
+  agency_id TEXT PRIMARY KEY,
   agency_name TEXT,
   agency_url TEXT,
   agency_timezone TEXT,
   agency_lang TEXT
 );
 CREATE TABLE calendar (
-  service_id TEXT,
+  service_id TEXT PRIMARY KEY,
   monday NUMERIC,
   tuesday NUMERIC,
   wednesday NUMERIC,
@@ -30,10 +30,11 @@ CREATE TABLE calendar (
 CREATE TABLE calendar_dates (
   service_id TEXT,
   date NUMERIC,
-  exception_type NUMERIC
+  exception_type NUMERIC,
+  PRIMARY KEY (service_id, date)
 );
 CREATE TABLE routes (
-  route_id TEXT,
+  route_id TEXT PRIMARY KEY,
   agency_id TEXT,
   route_short_name TEXT,
   route_long_name TEXT,
@@ -47,10 +48,12 @@ CREATE TABLE shapes (
   shape_id TEXT,
   shape_pt_lat REAL,
   shape_pt_lon REAL,
-  shape_pt_sequence NUMERIC)
+  shape_pt_sequence NUMERIC,
+  PRIMARY KEY (shape_id, shape_pt_sequence)
+)
 ;
 CREATE TABLE stops (
-  stop_id TEXT,
+  stop_id TEXT PRIMARY KEY,
   stop_name TEXT,
   stop_desc TEXT,
   stop_lat REAL,
@@ -65,12 +68,13 @@ CREATE TABLE stop_times (
   stop_id TEXT,
   stop_sequence NUMERIC,
   pickup_type NUMERIC,
-  drop_off_type NUMERIC
+  drop_off_type NUMERIC,
+  PRIMARY KEY (trip_id, stop_id)
 );
 CREATE TABLE trips (
   route_id TEXT,
   service_id TEXT,
-  trip_id TEXT,
+  trip_id TEXT PRIMARY KEY,
   trip_headsign TEXT,
   direction_id NUMERIC,
   block_id TEXT,
