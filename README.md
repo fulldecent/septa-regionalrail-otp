@@ -15,3 +15,13 @@ See the [database folder](https://github.com/fulldecent/septa-regionalrail-otp/t
 ## Running the site
 
 Install the `website` folder on a PHP web server.
+
+## Why am I doing this?
+
+I set up this project to contribute major changes to SEPTA's 2008 rail schedule. OTP was a significant problem then and progress has since improved greatly.
+
+I would like SEPTA to hire me on a monthly retainer to analyze and recommend changes to their schedule based on this and other information.
+
+## Contributing
+
+Please send issues and PRs for things you would like to improve. I am not very motivated to make changes because I have failed to attract funding from SEPTA. But I'd be happy to review your work if you are bringing significant effort to this project.
