@@ -10,7 +10,7 @@ These reports use every train's arrival time from 2008 until present to recommen
 
 ## Getting data
 
-See the [database folder](https://github.com/fulldecent/septa-regionalrail-otp/tree/master/website/database) for details on how to get updated schedules and train lateness data from SEPTA.
+See the [database folder](https://github.com/fulldecent/septa-regionalrail-otp/tree/master/website/databases) for details on how to get updated schedules and train lateness data from SEPTA.
 
 ## Running the site
 
