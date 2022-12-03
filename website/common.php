@@ -37,7 +37,7 @@ class SeptaTrainView
     }
     if ($year < '2009' || $year > (date('Y') + 1)) {
       // DOS protection
-      die('Invalid year');
+      die('Invalid year:' . htmlspecialchars($year));
     }
     
     // Set up database https://phpdelusions.net/pdo
@@ -72,6 +72,7 @@ class SeptaTrainView
          WHERE train IN ('.$trainFillers.')
            AND day >= ?
            AND day <= ?
+         ORDER BY day
       ';
       $statement = $database->prepare($sql);
       $statement->execute(array_merge($trains, [$start], [$end]));
@@ -155,6 +156,7 @@ class ReportingPeriod
     $end = date('Y-m-d', mktime(0,0,0,(int)date('n')+1,0,date('Y')));
     $name = 'Calendar Month '.date('F Y', strtotime($start));
     $this->allPeriods[] = (object)['name'=>$name, 'start'=>$start, 'end'=>$end];
+    $this->allPeriods[] = (object)['name'=>'CUSTOM', 'start'=>'2017-01-29', 'end'=>'2017-04-23'];
   }
   
   function getSelectedPeriod()
@@ -257,10 +259,7 @@ class SeptaSchedule
     self::getDatabase();
     $this->route = $route;
     $this->schedule = $schedule;
-  }
-  
-  
-  
+  }  
   
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
@@ -427,9 +426,9 @@ class SeptaSchedule
       $candidate = $paths[0][0];
       foreach (array_slice($paths, 1) as $otherPath) {
         if (array_search($candidate, $otherPath) > 0) {
-          // The other path has something before candidate
+          // The other path has something before candidate, so candidate is bad
           array_push($paths, array_shift($paths));
-          continue;
+          continue 2;
         }
       }
       $retval[] = $candidate;
