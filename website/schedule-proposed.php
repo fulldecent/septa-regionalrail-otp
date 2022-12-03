@@ -23,8 +23,8 @@ if ($direction == 'inbound') {
 
 $latenessByTrainDayAndTime = $trainView->latenessByTrainDayAndTimeForTrainsWithStartAndEndDate($trains, $selectedPeriod->start, $selectedPeriod->end);
 
-$percentile = .10;
-$changeThresholdInMinutes = 1; # Only make recommendations this many minutes or more
+$percentile = (!empty($_GET['percentile']) && intval($_GET['percentile'])) ? intval($_GET['percentile']) : 90;
+$changeThresholdInMinutes = (!empty($_GET['threshold']) && intval($_GET['threshold'])) ? intval($_GET['threshold']) : 1;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,14 +35,14 @@ $changeThresholdInMinutes = 1; # Only make recommendations this many minutes or 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <style>
-      @media print {a[href]:after {content: none !important;}} /* http://stackoverflow.com/q/7301989 */
+      @media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */
       td,th{width:7%}
     </style>
   </head>
   <body style="margin:1em">
     <h1><?= htmlentities($route) ?> &mdash; Proposed Schedule</h1>
     <p class="lead">Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
-    <p class="lead"><span class="text-danger"><i class="glyphicon glyphicon-star"></i> Changes are proposed</span> when <?= 100-100*$percentile ?>%+ of trains are <?= $changeThresholdInMinutes ?>+ minutes late for any stop.</p>
+    <p class="lead"><span class="text-danger"><i class="glyphicon glyphicon-star"></i> Changes are proposed</span><!-- when <?= $percentile ?>%+ of trains are <?= $changeThresholdInMinutes ?>+ minutes late for any stop.--></p>
     <hr>
     <h2><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h2>
     <table class="table table-hover table-condensed table-responsive">
@@ -67,7 +67,7 @@ foreach ($trains as $train) {
     }
     
     sort($latenessByDay);
-    $p_late = $latenessByDay[floor((count($latenessByDay)-1)*$percentile)];
+    $p_late = $latenessByDay[floor((count($latenessByDay)-1)*((100-$percentile)/100))];
     $highlighted = $p_late >= $changeThresholdInMinutes;
     $class = $highlighted ? 'class="danger"':'';
     $title = 'title="observations: '.count($latenessByDay).'"';

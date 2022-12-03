@@ -10,17 +10,17 @@ $serviceDates = SeptaSchedule::getServiceDates();
     <title>SEPTA Reporting Tool</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-    <style>@media print {a[href]:after {content: none !important;}} /* http://stackoverflow.com/q/7301989 */</style>
+    <style>@media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */</style>
   </head>
   <body style="margin-top:2em">
     <div class="container">
       <h1>SEPTA Regional Rail On-Time Performance Report</h1>
       <p class="lead">
-        These reports use every train's arrival time from 2009 until present to recommend schedule changes for chronically late service. Reports created by <a href="http://phor.net">William Entriken</a> (not affiliated with SEPTA). Also see SEPTA's less detailed <a href="http://www.septa.org/service/rail/otp.html">official OTP reports</a>.
+        We log every train's location every minute from 2009 until present to recommend schedule changes for chronically late service. Reports created by <a href="https://phor.net">William Entriken</a> (not affiliated with SEPTA). Also see SEPTA's less detailed <a href="https://www.septa.org/service/rail/otp.html">official OTP reports</a>.
       </p>
       
       <div class="card">
-        <div class="card-block">          
+        <div class="card-block">
           <form method="POST" class="form-inline">
             <span class="lead">
               Reports use <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.
@@ -46,7 +46,8 @@ foreach ($routes as $route) {
 </span> ".$route->route_short_name."</span>";
   echo "<td><a href=\"schedule-current.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=inbound\">$icon Schedule</a>";
   echo "<td><a href=\"schedule-average.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=inbound\">$icon Lateness</a>";
-  echo "<td><a href=\"schedule-proposed.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=inbound\">$icon Proposed fix</a>";
+//  echo "<td><a href=\"schedule-proposed.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=inbound\">$icon Proposed fix</a>";
+  echo "<td class=\"text-muted\">$icon Proposed fix";
   echo "<td><a href=\"schedule-current.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=outbound\">$icon Schedule</a>";
   echo "<td><a href=\"schedule-average.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=outbound\">$icon Lateness</a>";
   echo "<td><a href=\"schedule-proposed.php&#63;route=".htmlentities(urlencode($route->route_short_name))."&amp;direction=outbound\">$icon Proposed fix</a>";

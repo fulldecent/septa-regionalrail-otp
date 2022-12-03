@@ -27,7 +27,7 @@ $latenessByDay = $trainView->latenessByDayForTrainAndTime($latenessByTrainDayAnd
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <style>
-      @media print {a[href]:after {content: none !important;}} /* http://stackoverflow.com/q/7301989 */
+      @media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */
       td,th{width:7%}
     </style>
   </head>
@@ -57,6 +57,7 @@ $stats[] = ["75th PERCENTILE", $latenessByDay[floor((count($latenessByDay)-1)*0.
 $stats[] = ["90th PERCENTILE", $latenessByDay[floor((count($latenessByDay)-1)*0.1)]];
 $stats[] = ["95th PERCENTILE", $latenessByDay[floor((count($latenessByDay)-1)*0.05)]];
 
+/*
 foreach ($stats as $stat) {
   $departure = date("H:i:s",($stat[1]*60)+strtotime($time));
   echo "<tr class='warning'><td>{$stat[0]}";
@@ -65,6 +66,7 @@ foreach ($stats as $stat) {
   echo "<td style=\"text-align:left\">";
   echo "  <hr style=\"margin:0 2em; width:".(10*$stat[1])."px; height:15px; color:red; background: red; border: none\" />";
 }
+*/
 ?>    
     </table>
     <p><?= count($latenessByDay) ?> observations used.</p>
