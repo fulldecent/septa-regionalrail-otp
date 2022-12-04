@@ -1,39 +1,34 @@
 <?php
 
-###OLDSTUFF
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Math
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function average($array, $none=0)
 {
-  if (!count($array)) return $none;
-  $sum   = array_sum($array);
-  $count = count($array);
-  return $sum/$count;
+  if (empty($array)) return $none;
+  return array_sum($array)/count($array);
 }
 
 function stdev($array)
 {
-  if (!count($array)) return 0;
-
+  if (empty($array)) return 0;
   $avg = average($array);
-  foreach ($array as $value) {
-    $variance[] = pow($value-$avg, 2);
-  }
-  $deviation = sqrt(average($variance));
-  return $deviation;
+  $sum = 0;
+  foreach ($array as $value) $sum += pow($value-$avg, 2);
+  return sqrt($sum/count($array));
 }
 
-
-  
-################################################################################
-## TRAINVIEW QUERIES
-################################################################################
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TrainView queries
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SeptaTrainView
 {
-  static $_trainviewDatabases = [];
+  private static $trainviewDatabases = [];
 
-  function getTrainviewDatabase($year)
+  private function getTrainviewDatabase($year)
   {
-    if (isset(self::$_trainviewDatabases[$year])) {
-      return self::$_trainviewDatabases[$year];
+    if (isset(self::$trainviewDatabases[$year])) {
+      return self::$trainviewDatabases[$year];
     }
     if ($year < '2009' || $year > (date('Y') + 1)) {
       // DOS protection
@@ -41,7 +36,7 @@ class SeptaTrainView
     }
     
     // Set up database https://phpdelusions.net/pdo
-    $trainviewDatabase = new PDO("sqlite:".__DIR__."/databases/trainview-$year.db");
+    $trainviewDatabase = new \PDO("sqlite:".__DIR__."/databases/trainview-$year.db");
     $trainviewDatabase->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $trainviewDatabase->exec('
     CREATE TABLE IF NOT EXISTS trainview (
@@ -54,10 +49,51 @@ class SeptaTrainView
     ');
     $trainviewDatabase->exec('CREATE INDEX IF NOT EXISTS trains ON trainview (train)');
     $trainviewDatabase->exec('CREATE INDEX IF NOT EXISTS train ON trainview (train,time)');
-    self::$_trainviewDatabases[$year] = $trainviewDatabase;
-    return self::$_trainviewDatabases[$year];
+    self::$trainviewDatabases[$year] = $trainviewDatabase;
+    return self::$trainviewDatabases[$year];
   }
-  
+
+  // If the latest reported lateness for this day/train is the same then skip insertion (the value is implicit)
+
+  /**
+   * Insert a trainview entry into the database. The inserted time must be the latest time for this day/train.
+   * If the latest reported lateness for this day/train is the same then skip insertion (the value is implicit)
+   * 
+   * @param string $serviceDay YYYY-MM-DD
+   * @param string $train 4-digit train number
+   * @param string $time HH:MM:SS
+   * @param int $lateness
+   */
+  function insertLateness(string $serviceDay, string $train, string $time, int $lateness)
+  {
+    $trainviewDatabase = $this->getTrainviewDatabase(substr($serviceDay, 0, 4));
+    $trainviewDatabase->beginTransaction();
+
+    // Get current lateness
+    $sql = <<<SQL
+SELECT lateness
+  FROM trainview
+ WHERE train=?
+   AND day=?
+ ORDER BY (time < "03:00:00") DESC, time DESC
+ LIMIT 1
+SQL;
+    $statement = $trainviewDatabase->prepare($sql);
+    $statement->execute([$train, $serviceDay]);
+    $lastLateness = $statement->fetchColumn();
+    if ($lastLateness !== false && $lateness === intval($lastLateness)) {
+      // No change
+      $trainviewDatabase->rollBack();
+      return;
+    }
+
+    // Insert new lateness
+    $sql = 'INSERT INTO trainview (day, train, time, lateness) VALUES (?, ?, ?, ?)';
+    $statement = $trainviewDatabase->prepare($sql);
+    $statement->execute([$serviceDay, $train, $time, $lateness]);
+    $trainviewDatabase->commit();
+  }
+
   // Trains like ['123', '234']
   // Start/end like '2016-04-05'
   function latenessByTrainDayAndTimeForTrainsWithStartAndEndDate($trains, $start, $end)
@@ -67,7 +103,7 @@ class SeptaTrainView
     for ($year = substr($start, 0, 4); $year <= substr($end, 0, 4); $year++) {
       $database = $this->getTrainviewDatabase($year);
       $sql = '
-        SELECT *
+        SELECT train, day, time, lateness
           FROM trainview
          WHERE train IN ('.$trainFillers.')
            AND day >= ?
@@ -110,7 +146,7 @@ class SeptaTrainView
    * @param mixed $time like '09:20:00'
    * @return void
    */
-  function latenessAtTime($latenessByTime, $time)
+  private function latenessAtTime($latenessByTime, $time)
   {
     $times = array_keys($latenessByTime);
     usort($times, ['SeptaTrainView', 'cmp_times']);
@@ -132,7 +168,7 @@ class SeptaTrainView
    * @param mixed $b
    * @return void
    */
-  static function cmp_times($a, $b)
+  private static function cmp_times($a, $b)
   {
     if ($a < '03:00:00' && $b > '03:00:00')
       return 1;
@@ -142,10 +178,9 @@ class SeptaTrainView
   }  
 }
 
-
-################################################################################
-## CALENDARS
-################################################################################
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Calendars
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ReportingPeriod
 {
   public $allPeriods;
@@ -164,70 +199,15 @@ class ReportingPeriod
     return $this->allPeriods[0];
   }
 }
-/*
-# SEPTA Fiscal Calendar
-$reportingPeriods = array(
-#  array('Calendar Year 2014', '2014-01-01', '2014-12-31'),
-  array('Calendar Year 2013', '2013-01-01', '2013-12-31'),
-  array('SEPTA Fiscal YEAR 2015 (in progress)', '2014-07-01', '2015-06-30'),
-  array('SEPTA Fiscal YEAR 2014', '2013-07-01', '2014-06-30'),
-  array('SEPTA Fiscal November 2013', '2013-10-27', '2013-11-30'),
-  array('SEPTA Fiscal October 2013', '2013-09-29', '2013-10-26'),
-  array('SEPTA Fiscal September 2013', '2013-09-01', '2013-09-28'),
-  array('SEPTA Fiscal August 2013', '2013-07-28', '2013-08-31'),
-  array('SEPTA Fiscal YEAR 2013', '2012-07-01', '2013-06-30'),
-  array('SEPTA Fiscal July 2013', '2013-07-01', '2013-07-27'),
-  array('SEPTA Fiscal June 2013', '2013-06-02', '2013-06-30'),
-  array('SEPTA Fiscal May 2013', '2013-04-28', '2013-06-01'),
-  array('SEPTA Fiscal April 2013', '2013-03-31', '2013-04-27'),
-  array('SEPTA Fiscal March 2013', '2013-02-24', '2013-03-30'),
-  array('SEPTA Fiscal February 2013', '2013-01-27', '2013-02-23'),
-  array('SEPTA Fiscal January 2013', '2012-12-30', '2013-01-26'),
-  array('SEPTA Fiscal December 2012', '2012-12-02', '2012-12-29'),
-  array('SEPTA Fiscal November 2012', '2012-10-28', '2012-12-01'),
-  array('SEPTA Fiscal October 2012', '2012-09-30', '2012-10-27'),
-  array('SEPTA Fiscal September 2012', '2012-09-02', '2012-09-29'),
-  array('SEPTA Fiscal August 2012', '2012-07-29', '2012-09-01'),
-  array('SEPTA Fiscal July 2012', '2012-07-01', '2012-07-28')
-);
-while (strtotime($reportingPeriods[0][2]) < strtotime(date('Y-m-01'))) {
-  $lastReportEndDate = strtotime($reportingPeriods[0][2]);
-  $newReportBeginDate = mktime(0,0,0,(int)date('n',$lastReportEndDate)+1,1,(int)date('Y',$lastReportEndDate+1));
-  $newReportEndDate = mktime(0,0,0,(int)date('n',$newReportBeginDate)+1,0,(int)date('Y',$newReportBeginDate));
-  $newRecord = array();
-  $newRecord[] = 'Calendar Month '.date('F Y', $newReportBeginDate);
-  $newRecord[] = date('Y-m-d', $newReportBeginDate);
-  $newRecord[] = date('Y-m-d', $newReportEndDate);
-  array_unshift($reportingPeriods, $newRecord);
-}
-$reportingPeriods[0][0] .= ' (in progress)';
 
-if ($_POST['reportPeriod']&&($_COOKIE['reportPeriod']=$_POST['reportPeriod'])) setcookie('reportPeriod', $_POST['reportPeriod']);
-if ($_POST['start']&&($_COOKIE['start']=$_POST['start'])) setcookie('start', $_POST['start']);
-if ($_POST['end']&&($_COOKIE['end']=$_POST['end'])) setcookie('end', $_POST['end']);
-if ($_POST['sched']&&($_COOKIE['sched']=$_POST['sched'])) setcookie('sched', $_POST['sched']);
-
-$reportPeriod = isset($_COOKIE['reportPeriod']) ? $_COOKIE['reportPeriod'] : $reportingPeriods[0][0];
-$reportPeriodData = array();
-foreach($reportingPeriods as $reportingPeriod)
-  if ($reportingPeriod[0] == $reportPeriod)
-    $reportPeriodData = $reportingPeriod;
-if (!count($reportPeriodData))
-  $reportPeriodData = $reportingPeriods[0];
-$start = $reportPeriodData[1];
-$end = $reportPeriodData[2];
-*/
-
-################################################################################
-## SCHEDULE QUERIES
-################################################################################
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Schedule queries
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SeptaSchedule
 {
   private static $database;
   public $route;
   public $schedule = 'M1';
-  
-  ## STATIC FUNCTIONS
   
   private static function getDatabase()
   {
@@ -253,7 +233,6 @@ class SeptaSchedule
     return $statement->fetchAll(PDO::FETCH_OBJ);
   }
 
-  
   function __construct($route, $schedule='M1')
   {
     self::getDatabase();
