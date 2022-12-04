@@ -88,7 +88,7 @@ SQL;
     }
 
     // Insert new lateness
-    $sql = 'INSERT INTO trainview (day, train, time, lateness) VALUES (?, ?, ?, ?)';
+    $sql = 'INSERT OR REPLACE INTO trainview (day, train, time, lateness) VALUES (?, ?, ?, ?)';
     $statement = $trainviewDatabase->prepare($sql);
     $statement->execute([$serviceDay, $train, $time, $lateness]);
     $trainviewDatabase->commit();
