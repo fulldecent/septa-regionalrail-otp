@@ -18,7 +18,7 @@ $serviceDates = SeptaSchedule::getServiceDates();
       <p class="lead">
         We log every train's location every minute from 2009 until present to recommend schedule changes for chronically late service. Reports created by <a href="https://phor.net">William Entriken</a> (not affiliated with SEPTA). Also see SEPTA's less detailed <a href="https://www.septa.org/service/rail/otp.html">official OTP reports</a>.
       </p>
-      
+
       <div class="card">
         <div class="card-block">
           <form method="POST" class="form-inline">
@@ -29,7 +29,7 @@ $serviceDates = SeptaSchedule::getServiceDates();
 if ($serviceDates->end < date('Y-m-d')) {
   echo '<p class="text-danger">This schedule data is out of date. <a href="mailto:phor@phor.net?subject=SEPTA%20OTP%20schedules&amp;body=Hi%20Will%2C%0A%0AI%20am%20using%20the%20SEPTA%20rail%20reporting%20tool.%20The%20schedule%20are%20out%20of%20date%2C%20please%20update%20them.">Contact Will</a> to update the schedules.</p>';
 }
-?>                
+?>
             </span>
           </form>
         </div>
@@ -66,12 +66,12 @@ foreach ($routes as $route) {
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-    
+
       ga('create', 'UA-52764-3', 'auto');
       ga('send', 'pageview');
     </script>
-    
-<a href="https://github.com/fulldecent/septa-regionalrail-otp"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>    
-    
+
+<a href="https://github.com/fulldecent/septa-regionalrail-otp"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+
 </body>
 </html>

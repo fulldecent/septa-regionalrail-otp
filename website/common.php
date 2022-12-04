@@ -34,7 +34,7 @@ class SeptaTrainView
       // DOS protection
       die('Invalid year:' . htmlspecialchars($year));
     }
-    
+
     // Set up database https://phpdelusions.net/pdo
     $trainviewDatabase = new \PDO("sqlite:".__DIR__."/databases/trainview-$year.db");
     $trainviewDatabase->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -58,7 +58,7 @@ class SeptaTrainView
   /**
    * Insert a trainview entry into the database. The inserted time must be the latest time for this day/train.
    * If the latest reported lateness for this day/train is the same then skip insertion (the value is implicit)
-   * 
+   *
    * @param string $serviceDay YYYY-MM-DD
    * @param string $train 4-digit train number
    * @param string $time HH:MM:SS
@@ -117,7 +117,7 @@ SQL;
       }
     }
     return $retval;
-  }  
+  }
 
   // Input from latenessByTrainDayAndTimeForTrainsWithStartAndEndDate
   function latenessByDayForTrainAndTime($latenessByTrainDayAndTime, $train, $time)
@@ -130,17 +130,17 @@ SQL;
       $lateness = $this->latenessAtTime($latenessByTime, $time);
       if (!is_null($lateness)) {
         $latenessByDay[$day] = $lateness;
-      }      
+      }
     }
     return $latenessByDay;
-  }  
-  
+  }
+
   /**
    * latenessAtTime function.
    *
    * Algorithm: finds based on the array key which is closest to, but not exceeding, TIME
    * Just like The Price is Right, just like Excel VLOOKUP
-   * 
+   *
    * @access public
    * @param mixed $latenessByTime array like ['09:22:00'=>0, '09:30:00'=>3, '10:20:00'=>0]
    * @param mixed $time like '09:20:00'
@@ -151,7 +151,7 @@ SQL;
     $times = array_keys($latenessByTime);
     usort($times, ['SeptaTrainView', 'cmp_times']);
     rsort($times);
-    
+
     foreach ($times as $candidateTime) {
       if ($this->cmp_times($time, $candidateTime) >= 0) {
         return $latenessByTime[$candidateTime];
@@ -159,10 +159,10 @@ SQL;
     }
     return NULL;
   }
-  
+
   /**
    * Compares two times, assuming that times < 3am are the next day (and thus later than others)
-   * 
+   *
    * @access public
    * @param mixed $a
    * @param mixed $b
@@ -175,7 +175,7 @@ SQL;
     if ($a > '03:00:00' && $b < '03:00:00')
       return -1;
     return strcmp($a, $b);
-  }  
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +184,7 @@ SQL;
 class ReportingPeriod
 {
   public $allPeriods;
-  
+
   function __construct()
   {
     $start = date('Y-m-01');
@@ -193,7 +193,7 @@ class ReportingPeriod
     $this->allPeriods[] = (object)['name'=>$name, 'start'=>$start, 'end'=>$end];
     $this->allPeriods[] = (object)['name'=>'CUSTOM', 'start'=>'2017-01-29', 'end'=>'2017-04-23'];
   }
-  
+
   function getSelectedPeriod()
   {
     return $this->allPeriods[0];
@@ -208,15 +208,15 @@ class SeptaSchedule
   private static $database;
   public $route;
   public $schedule = 'M1';
-  
+
   private static function getDatabase()
   {
     if (!empty(self::$database)) return self::$database;
     self::$database = new PDO('sqlite:'.__DIR__.'/databases/septaSchedules.db');
     self::$database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    return self::$database;    
+    return self::$database;
   }
-  
+
   // Dates for the current service calendar
   static function getServiceDates()
   {
@@ -238,8 +238,8 @@ class SeptaSchedule
     self::getDatabase();
     $this->route = $route;
     $this->schedule = $schedule;
-  }  
-  
+  }
+
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
   function getInboundTrains()
@@ -253,7 +253,7 @@ class SeptaSchedule
                   -- INBOUND TRIPS
               SELECT block_id, service_id -- TRAIN NUMBER
                 FROM trips
-                     NATURAL JOIN routes 
+                     NATURAL JOIN routes
                WHERE route_short_name=?
                  AND service_id=?
                  AND trip_headsign = "Center City Philadelphia"
@@ -262,7 +262,7 @@ class SeptaSchedule
       	     NATURAL JOIN routes
              NATURAL JOIN stop_times
              NATURAL JOIN stops
-       WHERE stop_name="Suburban Station" 
+       WHERE stop_name="Suburban Station"
        ORDER BY arrival_time>"03:00:00" DESC,
              arrival_time
     ';
@@ -274,7 +274,7 @@ class SeptaSchedule
     }
     return $retval;
   }
-  
+
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
   function getOutboundTrains()
@@ -288,7 +288,7 @@ class SeptaSchedule
                   -- INBOUND TRIPS
               SELECT block_id, service_id -- TRAIN NUMBER
                 FROM trips
-                     NATURAL JOIN routes 
+                     NATURAL JOIN routes
                WHERE route_short_name=?
                  AND service_id=?
                  AND trip_headsign <> "Center City Philadelphia"
@@ -297,7 +297,7 @@ class SeptaSchedule
       	     NATURAL JOIN routes
              NATURAL JOIN stop_times
              NATURAL JOIN stops
-       WHERE stop_name="Suburban Station" 
+       WHERE stop_name="Suburban Station"
        ORDER BY arrival_time>"03:00:00" DESC,
              arrival_time
     ';
@@ -309,7 +309,7 @@ class SeptaSchedule
     }
     return $retval;
   }
-  
+
   # Returns array of stops in order to Suburban Station
   function getInboundStops($trains)
   {
@@ -389,7 +389,7 @@ class SeptaSchedule
     array_unshift($mergedPath, 'Suburban Station');
     return $mergedPath;
   }
-  
+
   // In: Like [['stop1', 'stop2'], ['stop2', 'stop3']]
   // Out: Like ['stop1', 'stop2', 'stop3']
   // Takes several strictly ordered paths and merges them
@@ -415,11 +415,11 @@ class SeptaSchedule
         if (count($path) && $path[0] == $candidate) {
           array_shift($path);
         }
-      }      
+      }
     }
-    return $retval;    
-  } 
-  
+    return $retval;
+  }
+
   # Returns with $retval[$train][$stop] = $time
   function getTimeByTrainAndStop($trains, $stops)
   {

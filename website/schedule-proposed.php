@@ -49,7 +49,7 @@ $changeThresholdInMinutes = (!empty($_GET['threshold']) && intval($_GET['thresho
 <?php
 echo "<tr><th>Train Number";
 foreach ($stops as $stop) {
-	echo "<th>$stop";  
+	echo "<th>$stop";
 }
 
 foreach ($trains as $train) {
@@ -57,15 +57,15 @@ foreach ($trains as $train) {
   foreach ($stops as $stop) {
     if (!isset($timeByTrainAndStop[$train][$stop])) {
       echo "<td>";
-      continue;      
+      continue;
     }
     $time = $timeByTrainAndStop[$train][$stop];
     $latenessByDay = $trainView->latenessByDayForTrainAndTime($latenessByTrainDayAndTime, $train, $time);
     if (empty($latenessByDay)) {
       echo "<td>";
-      continue;      
+      continue;
     }
-    
+
     sort($latenessByDay);
     $p_late = $latenessByDay[floor((count($latenessByDay)-1)*((100-$percentile)/100))];
     $highlighted = $p_late >= $changeThresholdInMinutes;
@@ -79,7 +79,7 @@ foreach ($trains as $train) {
     echo "<td $class $title><a href=\"".htmlspecialchars($url)."\">$text</a></td>\n";
   }
 }
-?>    
+?>
     </table>
     <hr>
     <footer>Created by William Entriken &mdash; Report generated <?= date('Y-m-d H:i'); ?> &mdash; <?= printf("%0.1f",microtime(true)-$startTime) ?> seconds</footer>
@@ -88,7 +88,7 @@ foreach ($trains as $train) {
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-    
+
       ga('create', 'UA-52764-3', 'auto');
       ga('send', 'pageview');
     </script>

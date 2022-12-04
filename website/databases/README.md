@@ -14,7 +14,7 @@ CREATE INDEX train ON trainview (train,time);
 CREATE INDEX trains ON trainview (train);
 ```
 
-Note: We store data with separate `day` and `time`. If `time` is before `03:00` then this represents a time during `day` plus one day. This is because service calculations reset at 3am. 
+Note: We store data with separate `day` and `time`. If `time` is before `03:00` then this represents a time during `day` plus one day. This is because service calculations reset at 3am.
 
 ## Schedule Schema
 

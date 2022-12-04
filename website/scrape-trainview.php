@@ -5,7 +5,7 @@
 ##
 require 'common.php';
 $trainView = new SeptaTrainView();
-  
+
 // SEPTA service days end at 3am, which happens to be midnight in LA
 $now = new DateTime();
 $now->setTimezone(new DateTimeZone('America/Los_Angeles'));

@@ -67,7 +67,7 @@ foreach ($stats as $stat) {
   echo "  <hr style=\"margin:0 2em; width:".(10*$stat[1])."px; height:15px; color:red; background: red; border: none\" />";
 }
 */
-?>    
+?>
     </table>
     <p><?= count($latenessByDay) ?> observations used.</p>
     <hr>
@@ -77,7 +77,7 @@ foreach ($stats as $stat) {
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-    
+
       ga('create', 'UA-52764-3', 'auto');
       ga('send', 'pageview');
     </script>
