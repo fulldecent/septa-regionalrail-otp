@@ -1,6 +1,6 @@
-# Database Notes
+# Database notes
 
-## TrainView Schema
+## TrainView schema
 
 ```sql lite
 CREATE TABLE trainview (
@@ -8,7 +8,7 @@ CREATE TABLE trainview (
   train varchar(4) NOT NULL,
   time time NOT NULL,
   lateness smallint(6) NOT NULL,
-  PRIMARY KEY  (day,train,time)
+  PRIMARY KEY (day,train,time)
 );
 CREATE INDEX train ON trainview (train,time);
 CREATE INDEX trains ON trainview (train);
@@ -22,31 +22,31 @@ See schema definition in `sqliteGTFSImport.txt`.
 
 ## Load SEPTA GTFS Data
 
-1. Set up
+```sh
+/bin/sh -e
 
-   ```sh
-   rm -rf tmp
-   mkdir tmp
-   cd tmp
-   ```
+# Work folder
+cd ~/Developer/septa-regionalrail-otp/website/databases
+rm -rf tmp && mkdir tmp && cd tmp
 
-2. Download the release from https://github.com/septadev/GTFS/releases into there
+# Get release from https://github.com/septadev/GTFS/releases/latest
+DOWNLOAD_URL=$(curl -s 'https://api.github.com/repos/septadev/GTFS/releases/latest' | jq --raw-output '.assets[0].browser_download_url')
+curl -LO $DOWNLOAD_URL
 
-3. Extract
+# Extract
+unzip gtfs_public.zip
+unzip google_rail.zip
+cd ..
 
-   ```sh
-   unzip gtfs_public.zip
-   unzip google_rail.zip
-   cd ..
-   ```
+# Import
+rm -f septaSchedules.db
+sqlite3 septaSchedules.db < sqliteGTFSImport.txt
 
-4. Load this into a SQLite database
+# Backup to septa-Schedules-YYYY-MM-DD.db
+TIMESTAMP=$(date +%Y-%m-%d)
+cp septaSchedules.db septaSchedules-$TIMESTAMP.db
 
-   ```sh
-   rm -f septaSchedules.db
-   sqlite3 septaSchedules.db < sqliteGTFSImport.txt
-   ```
-
-5. Copy this database into your `databases` folder
-
-
+# Deploy
+scp ./septaSchedules-2023-10-14.db apps.phor.net:public_html/apps/septa/databases/
+scp ./septaSchedules.db apps.phor.net:public_html/apps/septa/databases/
+```
