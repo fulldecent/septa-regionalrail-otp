@@ -14,7 +14,7 @@ CREATE INDEX train ON trainview (train,time);
 CREATE INDEX trains ON trainview (train);
 ```
 
-Note: We store data with separate `day` and `time`. If `time` is before `03:00` then this represents a time during `day` plus one day. This is because service calculations reset at 3am.
+Note: We store data with separate `day` and `time`. The lowest value for time is `03:00` which goes up to `23:59` then to `00:00` and up to `02:59`. This is because SEPTA service calculations reset at `03:00`.
 
 ## Schedule Schema
 
@@ -47,6 +47,6 @@ TIMESTAMP=$(date +%Y-%m-%d)
 cp septaSchedules.db septaSchedules-$TIMESTAMP.db
 
 # Deploy
-scp ./septaSchedules-2023-10-14.db apps.phor.net:public_html/apps/septa/databases/
-scp ./septaSchedules.db apps.phor.net:public_html/apps/septa/databases/
+scp septaSchedules-$TIMESTAMP.db apps.phor.net:public_html/apps/septa/databases/
+ssh apps.phor.net "cp public_html/apps/septa/databases/septaSchedules-$TIMESTAMP.db public_html/apps/septa/databases/septaSchedules.db"
 ```
