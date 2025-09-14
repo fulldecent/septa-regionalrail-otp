@@ -3,19 +3,31 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Math
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function average($array, $none=0)
+function excludeSuperLate(array $array, int $threshold=99)
+{
+  return array_filter($array, function($value) use ($threshold) { return $value <= $threshold; });
+}
+
+function average(array $array, int $none=0)
 {
   if (empty($array)) return $none;
   return array_sum($array)/count($array);
 }
 
-function stdev($array)
+function stdev(array $array, int $none=0)
 {
-  if (empty($array)) return 0;
+  if (empty($array)) return $none;
   $avg = average($array);
   $sum = 0;
   foreach ($array as $value) $sum += pow($value-$avg, 2);
   return sqrt($sum/count($array));
+}
+
+function percentile(array $array, float $percentile, int $none=0)
+{
+  if (empty($array)) return $none;
+  sort($array);
+  return $array[floor((count($array)-1)*($percentile/100))];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,12 +37,12 @@ class SeptaTrainView
 {
   private static $trainviewDatabases = [];
 
-  private function getTrainviewDatabase($year)
+  private function getTrainviewDatabase(int $year)
   {
     if (isset(self::$trainviewDatabases[$year])) {
       return self::$trainviewDatabases[$year];
     }
-    if ($year < '2009' || $year > (date('Y') + 1)) {
+    if ($year < 2009 || $year > intval(date('Y') + 1)) {
       // DOS protection
       die('Invalid year:' . htmlspecialchars($year));
     }
@@ -38,22 +50,20 @@ class SeptaTrainView
     // Set up database https://phpdelusions.net/pdo
     $trainviewDatabase = new \PDO("sqlite:".__DIR__."/databases/trainview-$year.db");
     $trainviewDatabase->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $trainviewDatabase->exec('
-    CREATE TABLE IF NOT EXISTS trainview (
-      day date NOT NULL,
-      train varchar(4) NOT NULL,
-      time time NOT NULL,
-      lateness smallint(6) NOT NULL,
-      PRIMARY KEY (day,train,time)
-    );
-    ');
+    $trainviewDatabase->exec(<<<SQL
+      CREATE TABLE IF NOT EXISTS trainview (
+        day date NOT NULL,
+        train varchar(4) NOT NULL,
+        time time NOT NULL,
+        lateness smallint(6) NOT NULL,
+        PRIMARY KEY (day,train,time)
+      );
+    SQL);
     $trainviewDatabase->exec('CREATE INDEX IF NOT EXISTS trains ON trainview (train)');
     $trainviewDatabase->exec('CREATE INDEX IF NOT EXISTS train ON trainview (train,time)');
     self::$trainviewDatabases[$year] = $trainviewDatabase;
     return self::$trainviewDatabases[$year];
   }
-
-  // If the latest reported lateness for this day/train is the same then skip insertion (the value is implicit)
 
   /**
    * Insert a trainview entry into the database. The inserted time must be the latest time for this day/train.
@@ -66,19 +76,18 @@ class SeptaTrainView
    */
   function insertLateness(string $serviceDay, string $train, string $time, int $lateness)
   {
-    $trainviewDatabase = $this->getTrainviewDatabase(substr($serviceDay, 0, 4));
+    $trainviewDatabase = $this->getTrainviewDatabase(intval(substr($serviceDay, 0, 4)));
     $trainviewDatabase->beginTransaction();
 
     // Get current lateness
-    $sql = <<<SQL
-SELECT lateness
-  FROM trainview
- WHERE train=?
-   AND day=?
- ORDER BY (time < "03:00:00") DESC, time DESC
- LIMIT 1
-SQL;
-    $statement = $trainviewDatabase->prepare($sql);
+    $statement = $trainviewDatabase->prepare(<<<SQL
+      SELECT lateness
+        FROM trainview
+      WHERE train=?
+        AND day=?
+      ORDER BY (time < "03:00:00") DESC, time DESC
+      LIMIT 1
+    SQL);
     $statement->execute([$train, $serviceDay]);
     $lastLateness = $statement->fetchColumn();
     if ($lastLateness !== false && $lateness === intval($lastLateness)) {
@@ -100,18 +109,17 @@ SQL;
   {
     $retval = [];
     $trainFillers = implode(',', array_fill(0, count($trains), '?'));
-    for ($year = substr($start, 0, 4); $year <= substr($end, 0, 4); $year++) {
-      $database = $this->getTrainviewDatabase($year);
-      $sql = '
+    foreach(range(substr($start, 0, 4), substr($end, 0, 4)) as $year) {
+      $database = $this->getTrainviewDatabase(intval($year));
+      $statement = $database->prepare(<<<SQL
         SELECT train, day, time, lateness
           FROM trainview
-         WHERE train IN ('.$trainFillers.')
+         WHERE train IN ($trainFillers)
            AND day >= ?
            AND day <= ?
          ORDER BY day
-      ';
-      $statement = $database->prepare($sql);
-      $statement->execute(array_merge($trains, [$start], [$end]));
+      SQL);
+      $statement->execute([...$trains, $start, $end]);
       while ($row = $statement->fetch()) {
         $retval[$row['train']][$row['day']][$row['time']] = $row['lateness'];
       }
@@ -244,70 +252,48 @@ class SeptaSchedule
   # Returns like: ['3014', '3015', ...]
   function getInboundTrains()
   {
-    # According to GTFS, SEPTA may have a trip from Airport to 30th street on the "Airport line"
-    # (which doesn't pass Suburban station) but have the same train number on a trip from 30th street to
-    # Fox Chase continue afterwards.
-    $sql = '
-      SELECT block_id
-        FROM (
-                  -- INBOUND TRIPS
-              SELECT block_id, service_id -- TRAIN NUMBER
-                FROM trips
-                     NATURAL JOIN routes
-               WHERE route_short_name=?
-                 AND service_id=?
-                 AND trip_headsign = "Center City Philadelphia"
-             ) a
+    # Previously, SEPTA GTFS did not include the Suburban Station stop both "inbound" and "outbound" directions of each
+    # train. Now they do, so we can directly filter by that.
+    $statement = self::$database->prepare(<<<SQL
+      SELECT block_id, service_id -- TRAIN NUMBER
+        FROM trips
+             NATURAL JOIN routes
       	     NATURAL JOIN trips
-      	     NATURAL JOIN routes
              NATURAL JOIN stop_times
              NATURAL JOIN stops
-       WHERE stop_name="Suburban Station"
+       WHERE route_short_name=:route_short_name
+         AND service_id=:service_id
+         AND trip_headsign = "Center City Philadelphia"
+         AND stop_name="Suburban Station"
        ORDER BY arrival_time>"03:00:00" DESC,
              arrival_time
-    ';
-    $statement = self::$database->prepare($sql);
-    $statement->execute([$this->route, $this->schedule]);
-    $retval = [];
-    while ($row = $statement->fetch()) {
-      $retval[] = $row['block_id'];
-    }
-    return $retval;
+    SQL);
+    $statement->execute([':route_short_name'=>$this->route, ':service_id'=>$this->schedule]);
+    return $statement->fetchAll(PDO::FETCH_COLUMN);
   }
 
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
   function getOutboundTrains()
   {
-    # According to GTFS, SEPTA may have a trip from Airport to 30th street on the "Airport line"
-    # (which doesn't pass Suburban station) but have the same train number on a trip from 30th street to
-    # Fox Chase continue afterwards.
-    $sql = '
-      SELECT block_id
-        FROM (
-                  -- INBOUND TRIPS
-              SELECT block_id, service_id -- TRAIN NUMBER
-                FROM trips
-                     NATURAL JOIN routes
-               WHERE route_short_name=?
-                 AND service_id=?
-                 AND trip_headsign <> "Center City Philadelphia"
-             ) a
+    # Previously, SEPTA GTFS did not include the Suburban Station stop both "inbound" and "outbound" directions of each
+    # train. Now they do, so we can directly filter by that.
+    $statement = self::$database->prepare(<<<SQL
+      SELECT block_id, service_id -- TRAIN NUMBER
+        FROM trips
+             NATURAL JOIN routes
       	     NATURAL JOIN trips
-      	     NATURAL JOIN routes
              NATURAL JOIN stop_times
              NATURAL JOIN stops
-       WHERE stop_name="Suburban Station"
+       WHERE route_short_name=:route_short_name
+         AND service_id=:service_id
+         AND trip_headsign <> "Center City Philadelphia"
+         AND stop_name="Suburban Station"
        ORDER BY arrival_time>"03:00:00" DESC,
              arrival_time
-    ';
-    $statement = self::$database->prepare($sql);
-    $statement->execute([$this->route, $this->schedule]);
-    $retval = [];
-    while ($row = $statement->fetch()) {
-      $retval[] = $row['block_id'];
-    }
-    return $retval;
+    SQL);
+    $statement->execute([':route_short_name'=>$this->route, ':service_id'=>$this->schedule]);
+    return $statement->fetchAll(PDO::FETCH_COLUMN);
   }
 
   # Returns array of stops in order to Suburban Station

@@ -6,7 +6,6 @@ $sched = empty($_GET['schedule']) ? 'M1' : $_GET['schedule'];
 $schedule = new SeptaSchedule($route, $sched);
 $inbound = $direction == 'inbound';
 $serviceDates = SeptaSchedule::getServiceDates();
-$startTime = microtime(true);
 
 if ($direction == 'inbound') {
   $trains = $schedule->getInboundTrains();
@@ -17,49 +16,62 @@ if ($direction == 'inbound') {
 }
 $timeByTrainAndStop = $schedule->getTimeByTrainAndStop($trains, $stops);
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <title><?= htmlentities($route) ?> <?= $inbound ? 'Inbound' : 'Outbound' ?> Schedule</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= htmlentities($route) ?> <?= $inbound ? 'inbound' : 'outbound' ?> schedule</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha256-pdY4ejLKO67E0CM2tbPtq1DJ3VGDVVdqAR6j3ZwdiE4=" crossorigin="anonymous">
     <style>
       @media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */
-      td,th{width:7%}
     </style>
  </head>
-  <body style="margin:1em">
-    <h1><?= htmlentities($route) ?>&mdash;current schedule</h1>
-    <p class="lead">Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
+  <body class="m-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">OTP report</a></li>
+        <li class="breadcrumb-item">AIR</li>
+        <li class="breadcrumb-item active" aria-current="page">current schedule</li>
+      </ol>
+    </nav>
+    <p>Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
     <hr>
-    <h2><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h2>
-    <table class="table table-hover table-condensed table-responsive">
-<?php
-echo "<tr><th>Train Number";
-foreach ($stops as $stop) {
-  echo "<th>$stop";
-}
+    <h1 class="h3"><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h1>
 
+    <table class="table table-hover table-condensed table-responsive table-striped">
+<?php
+echo '<tr><th>Train number <i class="bi bi-arrow-right"></i></th>';
 foreach ($trains as $train) {
-  echo "\n<tr><td>$train";
-  foreach ($stops as $stop) {
+  echo "<th>$train</th>";
+}
+echo '</tr>';
+
+foreach ($stops as $stop) {
+  $rowClass = '';
+  if (in_array($stop, ['Gray 30th Street', 'Suburban Station', 'Jefferson Station'])) {
+    $rowClass = 'table-info';
+  }
+  echo "\n<tr class=\"$rowClass\"><td class=\"text-nowrap\">$stop";
+  foreach ($trains as $train) {
     if (!isset($timeByTrainAndStop[$train][$stop])) {
-      echo "<td>";
+      echo "<td></td>";
       continue;
     }
     $time = $timeByTrainAndStop[$train][$stop];
     if ($time >= '12:00:00' && $time < '24:00:00') {
-      echo "<td><b>".date("H:i",strtotime($time))."</b>";
+      echo "<td><b>".date("H:i",strtotime($time))."</b></td>";
     } else {
-      echo "<td>".substr($time, 0, 5);
+      echo "<td>" . substr($time, 0, 5) . "</td>";
     }
   }
+  echo '</tr>';
 }
 ?>
     </table>
+
     <hr>
-    <footer>Created by William Entriken &mdash; Report generated <?= date('Y-m-d H:i'); ?></footer>
+    <footer>William Entriken — generated <?= date('Y-m-d H:i\Z'); ?></footer>
   </body>
 </html>
