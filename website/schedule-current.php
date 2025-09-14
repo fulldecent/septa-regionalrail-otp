@@ -24,14 +24,14 @@ $timeByTrainAndStop = $schedule->getTimeByTrainAndStop($trains, $stops);
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <style>
       @media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */
       td,th{width:7%}
     </style>
  </head>
   <body style="margin:1em">
-    <h1><?= htmlentities($route) ?> &mdash; Current Schedule</h1>
+    <h1><?= htmlentities($route) ?>&mdash;current schedule</h1>
     <p class="lead">Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
     <hr>
     <h2><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h2>

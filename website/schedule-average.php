@@ -30,16 +30,17 @@ $latenessByTrainDayAndTime = $trainView->latenessByTrainDayAndTimeForTrainsWithS
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha256-pdY4ejLKO67E0CM2tbPtq1DJ3VGDVVdqAR6j3ZwdiE4=" crossorigin="anonymous">
     <style>
       @media print {a[href]:after {content: none !important;}} /* https://stackoverflow.com/q/7301989 */
       td,th{width:7%}
     </style>
   </head>
   <body style="margin:1em">
-    <h1><?= htmlentities($route) ?> &mdash; Average Lateness (in minutes)</h1>
+    <h1><?= htmlentities($route) ?>&mdash;average lateness (in minutes)</h1>
     <p class="lead">Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
-    <p class="lead text-danger"><i class="glyphicon glyphicon-star"></i> Stops averaging 3+ minutes late are highlighted.</p>
+    <p class="lead bg-danger-subtle"><i class="bi bi-star-fill"></i> Stops averaging 3+ minutes late are highlighted.</p>
     <hr>
     <h2><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h2>
     <table class="table table-hover table-condensed table-responsive">
@@ -64,11 +65,11 @@ foreach ($trains as $train) {
     }
 
     $highlighted = average($latenessByDay) >= 3;
-    $class = $highlighted ? 'class="danger"':'';
+    $class = $highlighted ? 'class="bg-danger-subtle"':'';
     $title = 'title="observations: '.count($latenessByDay).'"';
     $url = 'schedule-detail.php?route='.urlencode($route).'&train='.$train.'&stop='.$stop;
     $text  = sprintf("%.1f",average($latenessByDay));
-    if ($highlighted) $text .= ' <i class="glyphicon glyphicon-star"></i>';
+    if ($highlighted) $text .= ' <i class="bi bi-star-fill"></i>';
     echo "<td $class $title><a href=\"".htmlspecialchars($url)."\">$text</a></td>\n";
   }
 }
