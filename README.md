@@ -24,4 +24,4 @@ I would like SEPTA to hire me on a monthly retainer to analyze and recommend cha
 
 ## Contributing
 
-Please send issues and PRs for things you would like to improve. I am not very motivated to make changes because I have failed to attract funding from SEPTA. But I'd be happy to review your work if you are bringing significant effort to this project.
+Please send PRs for things you would like to improve. I'd be happy to review your work if you are bringing significant effort to this project.
