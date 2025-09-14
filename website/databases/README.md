@@ -50,3 +50,17 @@ cp septaSchedules.db septaSchedules-$TIMESTAMP.db
 scp septaSchedules-$TIMESTAMP.db apps.phor.net:public_html/apps/septa/databases/
 ssh apps.phor.net "cp public_html/apps/septa/databases/septaSchedules-$TIMESTAMP.db public_html/apps/septa/databases/septaSchedules.db"
 ```
+
+
+## Quick queries
+
+See all the stops for a specific line on a map.
+
+```sql
+SELECT DISTINCT stop_name, stop_lat, stop_lon
+  FROM stops
+       NATURAL JOIN stop_times
+       NATURAL JOIN trips
+ WHERE route_id = "PAO"
+```
+
