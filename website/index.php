@@ -56,7 +56,7 @@ foreach ($routes as $route) {
       </blockquote>
 
       <footer>
-        <p>William Entriken — <i class="bi bi-globe"></i> Philadelphia USA — program updated <?= date('Y-m-d') ?> — <a href="https://github.com/fulldecent/septa-regionalrail-otp">fork on GitHub</a></p>
+        <p>William Entriken — <i class="bi bi-globe"></i> Philadelphia USA — program updated <?= date('Y-m-d') ?> — <a href="https://github.com/fulldecent/septa-regionalrail-otp">fork on GitHub</a></p> — <a href="https://huggingface.co/fulldecent">historical data on Hugging Face</a></p>
       </footer>
     </div>
 </body>
