@@ -2,9 +2,10 @@
 require 'common.php';
 $route = $_GET['route'] or die('?route=XXX&direction=XXX');
 $direction = $_GET['direction'] or die('?route=XXX&direction=XXX');
-$sched = empty($_GET['schedule']) ? 'M1' : $_GET['schedule'];
+$sched = empty($_GET['schedule']) ? null : $_GET['schedule'];
 $schedule = new SeptaSchedule($route, $sched);
 $inbound = $direction == 'inbound';
+$serviceIds = SeptaSchedule::getServiceIdsForRoute($route);
 $startTime = microtime(true);
 $trainView = new SeptaTrainView();
 $serviceDates = SeptaSchedule::getServiceDates();
@@ -45,7 +46,16 @@ $changeThresholdInMinutes = empty($_GET['threshold']) ? 1 : intval($_GET['thresh
         <li class="breadcrumb-item active">proposed schedule</li>
       </ol>
     </nav>
-    <p>Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
+    <form method="GET" class="mb-3">
+      <input type="hidden" name="route" value="<?= htmlspecialchars($route) ?>">
+      <input type="hidden" name="direction" value="<?= htmlspecialchars($direction) ?>">
+      <label for="schedule" class="form-label">Service schedule:</label>
+      <select name="schedule" id="schedule" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+<?php foreach ($serviceIds as $sid): ?>
+        <option value="<?= htmlspecialchars($sid->service_id) ?>"<?= $sid->service_id === $schedule->schedule ? ' selected' : '' ?>><?= htmlspecialchars($sid->label) ?></option>
+<?php endforeach; ?>
+      </select>
+    </form>
     <p class="bg-danger-subtle"><i class="bi bi-star-fill"></i> Changes are proposed when less than <?= $percentile ?>% of trains are less than <?= $changeThresholdInMinutes ?> minutes late for any stop.</p>
     <hr>
     <h1 class="h3"><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h1>

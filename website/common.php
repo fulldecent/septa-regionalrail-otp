@@ -215,7 +215,7 @@ class SeptaSchedule
 {
   private static $database;
   public $route;
-  public $schedule = 'M1';
+  public $schedule;
 
   private static function getDatabase()
   {
@@ -229,9 +229,67 @@ class SeptaSchedule
   static function getServiceDates()
   {
     $database = self::getDatabase();
-    $statement = $database->query('SELECT MAX(start_date) AS start, MAX(end_date) AS end FROM calendar');
-    list($start, $end) = $statement->fetch();
-    return (object)['start'=>date('Y-m-d', strtotime($start)), 'end'=>date('Y-m-d', strtotime($end))];
+    $today = date('Ymd');
+    $statement = $database->prepare(<<<SQL
+      SELECT MIN(start_date) AS start_date, MAX(end_date) AS end_date
+        FROM calendar
+       WHERE monday = 1
+         AND start_date <= :today
+         AND end_date >= :today
+    SQL);
+    $statement->execute([':today' => $today]);
+    $row = $statement->fetch();
+    if (!$row || !$row['start_date']) {
+      $statement = $database->query('SELECT MIN(start_date) AS start_date, MAX(end_date) AS end_date FROM calendar');
+      $row = $statement->fetch();
+    }
+    return (object)['start'=>date('Y-m-d', strtotime($row['start_date'])), 'end'=>date('Y-m-d', strtotime($row['end_date']))];
+  }
+
+  // The weekday (MTWRF) service_id for the current date and given route
+  static function getWeekdayServiceId($routeShortName = null)
+  {
+    $database = self::getDatabase();
+    $today = date('Ymd');
+    $routeJoin = '';
+    $routeWhere = '';
+    if ($routeShortName !== null) {
+      $routeJoin = 'JOIN trips USING(service_id) JOIN routes USING(route_id)';
+      $routeWhere = "AND route_short_name = " . $database->quote($routeShortName);
+    }
+    $statement = $database->query(<<<SQL
+      SELECT DISTINCT calendar.service_id
+        FROM calendar
+             $routeJoin
+       WHERE monday = 1
+         AND tuesday = 1
+         AND wednesday = 1
+         AND thursday = 1
+         AND friday = 1
+         AND start_date <= '$today'
+         AND end_date >= '$today'
+             $routeWhere
+       ORDER BY start_date DESC
+       LIMIT 1
+    SQL);
+    $result = $statement->fetchColumn();
+    if ($result === false) {
+      $statement = $database->query(<<<SQL
+        SELECT DISTINCT calendar.service_id
+          FROM calendar
+               $routeJoin
+         WHERE monday = 1
+           AND tuesday = 1
+           AND wednesday = 1
+           AND thursday = 1
+           AND friday = 1
+               $routeWhere
+         ORDER BY start_date DESC
+         LIMIT 1
+      SQL);
+      $result = $statement->fetchColumn();
+    }
+    return $result;
   }
 
   static function getRoutes()
@@ -241,11 +299,47 @@ class SeptaSchedule
     return $statement->fetchAll(PDO::FETCH_OBJ);
   }
 
-  function __construct($route, $schedule='M1')
+  // All service_ids with human-readable labels, for a given route
+  static function getServiceIdsForRoute($routeShortName)
+  {
+    $database = self::getDatabase();
+    $statement = $database->prepare(<<<SQL
+      SELECT DISTINCT c.service_id,
+             c.monday, c.tuesday, c.wednesday, c.thursday, c.friday, c.saturday, c.sunday,
+             c.start_date, c.end_date
+        FROM calendar c
+             JOIN trips t USING(service_id)
+             JOIN routes r USING(route_id)
+       WHERE r.route_short_name = :route
+       ORDER BY c.start_date, c.service_id
+    SQL);
+    $statement->execute([':route' => $routeShortName]);
+    $results = [];
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+      $days = '';
+      if ($row['monday']) $days .= 'M';
+      if ($row['tuesday']) $days .= 'T';
+      if ($row['wednesday']) $days .= 'W';
+      if ($row['thursday']) $days .= 'R';
+      if ($row['friday']) $days .= 'F';
+      if ($row['saturday']) $days .= 'Sa';
+      if ($row['sunday']) $days .= 'Su';
+      $start = date('Y-m-d', strtotime($row['start_date']));
+      $end = date('Y-m-d', strtotime($row['end_date']));
+      $results[] = (object)[
+        'service_id' => $row['service_id'],
+        'label' => "$days ($start to $end)",
+        'days' => $days
+      ];
+    }
+    return $results;
+  }
+
+  function __construct($route, $schedule=null)
   {
     self::getDatabase();
     $this->route = $route;
-    $this->schedule = $schedule;
+    $this->schedule = $schedule ?? self::getWeekdayServiceId($route);
   }
 
   # Train numbers ordered by time they reach Suburban Station
@@ -322,6 +416,7 @@ class SeptaSchedule
                        AND stop_name='Suburban Station'
                    ) b
              WHERE a.block_id = b.block_id
+               AND a.stop_name <> 'Suburban Station'
                AND (a.arrival_time>'03:00:00' AND b.arrival_time<'03:00:00' OR a.arrival_time<b.arrival_time)
              ORDER BY block_id, arrival_time, stop_name";
     $statement = self::$database->prepare($sql);
@@ -362,6 +457,7 @@ class SeptaSchedule
                        AND stop_name='Suburban Station'
                    ) b
              WHERE a.block_id = b.block_id
+               AND a.stop_name <> 'Suburban Station'
                AND (a.arrival_time<'03:00:00' AND b.arrival_time>'03:00:00' OR a.arrival_time>b.arrival_time)
              ORDER BY block_id, arrival_time, stop_name";
     $statement = self::$database->prepare($sql);
@@ -419,7 +515,8 @@ class SeptaSchedule
                    NATURAL JOIN trips
              WHERE block_id IN ($trainFillers)
                AND stop_name IN ($stopsFillers)
-               AND service_id=?";
+               AND service_id=?
+             ORDER BY stop_sequence";
     $statement = self::$database->prepare($sql);
     $statement->execute(array_merge($trains, $stops, [$this->schedule]));
     $retval = [];

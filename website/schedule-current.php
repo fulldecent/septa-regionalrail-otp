@@ -2,10 +2,11 @@
 require 'common.php';
 $route = $_GET['route'] or die('?route=XXX&direction=XXX');
 $direction = $_GET['direction'] or die('?route=XXX&direction=XXX');
-$sched = empty($_GET['schedule']) ? 'M1' : $_GET['schedule'];
+$sched = empty($_GET['schedule']) ? null : $_GET['schedule'];
 $schedule = new SeptaSchedule($route, $sched);
 $inbound = $direction == 'inbound';
 $serviceDates = SeptaSchedule::getServiceDates();
+$serviceIds = SeptaSchedule::getServiceIdsForRoute($route);
 
 if ($direction == 'inbound') {
   $trains = $schedule->getInboundTrains();
@@ -36,7 +37,16 @@ $timeByTrainAndStop = $schedule->getTimeByTrainAndStop($trains, $stops);
         <li class="breadcrumb-item active" aria-current="page">current schedule</li>
       </ol>
     </nav>
-    <p>Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
+    <form method="GET" class="mb-3">
+      <input type="hidden" name="route" value="<?= htmlspecialchars($route) ?>">
+      <input type="hidden" name="direction" value="<?= htmlspecialchars($direction) ?>">
+      <label for="schedule" class="form-label">Service schedule:</label>
+      <select name="schedule" id="schedule" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+<?php foreach ($serviceIds as $sid): ?>
+        <option value="<?= htmlspecialchars($sid->service_id) ?>"<?= $sid->service_id === $schedule->schedule ? ' selected' : '' ?>><?= htmlspecialchars($sid->label) ?></option>
+<?php endforeach; ?>
+      </select>
+    </form>
     <hr>
     <h1 class="h3"><?= $inbound ? 'Inbound' : 'Outbound' ?> service</h1>
 

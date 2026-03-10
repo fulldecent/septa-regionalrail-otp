@@ -3,8 +3,9 @@ require 'common.php';
 $route = $_GET['route'] or die('?route=XXX&train=XXX&stop=XXX');
 $train = $_GET['train'] or die('?route=XXX&train=XXX&stop=XXX');
 $stop = $_GET['stop'] or die('?route=XXX&train=XXX&stop=XXX');
-$sched = empty($_GET['schedule']) ? 'M1' : $_GET['schedule'];
+$sched = empty($_GET['schedule']) ? null : $_GET['schedule'];
 $schedule = new SeptaSchedule($route, $sched);
+$serviceIds = SeptaSchedule::getServiceIdsForRoute($route);
 $trainView = new SeptaTrainView();
 $serviceDates = SeptaSchedule::getServiceDates();
 $reportingPeriod = new ReportingPeriod();
@@ -37,7 +38,17 @@ $latenessByDay = $trainView->latenessByDayForTrainAndTime($latenessByTrainDayAnd
         <li class="breadcrumb-item active">stop <?= htmlspecialchars($stop) ?></li>
       </ol>
     </nav>
-    <p>Using <strong>MTWRF</strong> schedule in effect from <strong><?= $serviceDates->start ?></strong> to <strong><?= $serviceDates->end ?></strong>.</p>
+    <form method="GET" class="mb-3">
+      <input type="hidden" name="route" value="<?= htmlspecialchars($route) ?>">
+      <input type="hidden" name="train" value="<?= htmlspecialchars($train) ?>">
+      <input type="hidden" name="stop" value="<?= htmlspecialchars($stop) ?>">
+      <label for="schedule" class="form-label">Service schedule:</label>
+      <select name="schedule" id="schedule" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+<?php foreach ($serviceIds as $sid): ?>
+        <option value="<?= htmlspecialchars($sid->service_id) ?>"<?= $sid->service_id === $schedule->schedule ? ' selected' : '' ?>><?= htmlspecialchars($sid->label) ?></option>
+<?php endforeach; ?>
+      </select>
+    </form>
     <p>Departure is scheduled for  <?= substr($time, 0, 5) ?>.</p>
     <hr>
     <h1 class="h3">Actual lateness</h1>
