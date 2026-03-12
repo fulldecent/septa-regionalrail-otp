@@ -55,6 +55,40 @@ foreach ($routes as $route) {
         Entriken, W. (<?= date('Y') ?>). <cite>SEPTA Regional Rail On-Time Performance Report</cite> [data set]. https://apps.phor.net/septa/
       </blockquote>
 
+      <h2 class="mt-5">News coverage</h2>
+      <ul>
+        <li>
+          <time datetime="2017-07-06">2017-07-06</time> —
+          <a href="https://technical.ly/philly/2017/07/06/septa-says-real-time-data-finally-coming-buses-trolleys/">SEPTA says real-time data on buses, trolleys finally coming to an app</a>
+          — Technically Philly
+        </li>
+        <li>
+          <time datetime="2014-01-23">2014-01-23</time> —
+          <a href="http://grist.org/list/this-app-keeps-track-of-just-how-late-philadelphias-trains-are-running/">This app keeps track of just how late Philadelphia's trains are running</a>
+          — Grist
+        </li>
+        <li>
+          <time datetime="2014-01-22">2014-01-22</time> —
+          <a href="http://www.metro-magazine.com/news/story/2014/01/septa-rider-creates-app-proposing-better-schedules-.aspx">SEPTA rider creates app proposing "better schedules"</a>
+          — Metro Magazine
+        </li>
+        <li>
+          <time datetime="2014-01-22">2014-01-22</time> —
+          <a href="http://www.thetransitwire.com/2014/01/22/septa-rider-creates-app-track-time-performance/">SEPTA rider creates app to track on-time performance</a>
+          — The Transit Wire
+        </li>
+        <li>
+          <time datetime="2014-01-20">2014-01-20</time> —
+          <a href="http://www.nbcphiladelphia.com/news/tech/Frustrated-Over-Late-SEPTA-Trains-Software-Developer-Creates-App-to-Recommend-Schedule-Changes-241182841.html">Frustrated over late SEPTA trains, software developer creates app proposing better schedules</a>
+          — NBC10 Philadelphia
+        </li>
+        <li>
+          <time datetime="2014-01-09">2014-01-09</time> —
+          <a href="https://technical.ly/philly/2014/01/09/septa-regional-rail-late-app/">SEPTA regional rail late app</a>
+          — Technically Philly
+        </li>
+      </ul>
+
       <footer>
         <p>William Entriken — <i class="bi bi-globe"></i> Philadelphia USA — program updated <?= date('Y-m-d') ?> — <a href="https://github.com/fulldecent/septa-regionalrail-otp">fork on GitHub</a> — <a href="https://huggingface.co/fulldecent">historical data on Hugging Face</a></p>
       </footer>
