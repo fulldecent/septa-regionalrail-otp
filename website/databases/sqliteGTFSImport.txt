@@ -92,9 +92,11 @@ CREATE TABLE trips (
 INSERT INTO agency SELECT agency_id, agency_name, agency_url, agency_timezone, agency_lang FROM agencyTMP;
 INSERT INTO calendar SELECT * FROM calendarTMP; -- HACK BECAUSE https://github.com/septadev/GTFS/issues/11
 INSERT INTO calendar_dates SELECT * FROM calendar_datesTMP; -- HACK BECAUSE https://github.com/septadev/GTFS/issues/11
-INSERT INTO routes SELECT route_id, agency_id, route_short_name, route_long_name, route_desc, route_type, route_url, route_color, route_text_color FROM routesTMP;
+-- GTFS v202609271 dropped route_desc. Keep the column so existing queries still match this schema.
+INSERT INTO routes SELECT route_id, agency_id, route_short_name, route_long_name, NULL, route_type, route_url, route_color, route_text_color FROM routesTMP;
 INSERT INTO shapes SELECT shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence FROM shapesTMP;
-INSERT INTO stops SELECT stop_id, stop_name, stop_desc, stop_lat, stop_lon, zone_id FROM stopsTMP;
+-- GTFS v202609271 dropped stop_desc and zone_id. Keep the columns so existing queries still match this schema.
+INSERT INTO stops SELECT stop_id, stop_name, NULL, stop_lat, stop_lon, NULL FROM stopsTMP;
 INSERT INTO stop_times SELECT trip_id, arrival_time, departure_time, stop_id, stop_sequence, pickup_type, drop_off_type FROM stop_timesTMP;
 INSERT INTO trips SELECT route_id, service_id, trip_id, trip_headsign, direction_id, block_id, shape_id FROM tripsTMP;
 DROP TABLE agencyTMP;
