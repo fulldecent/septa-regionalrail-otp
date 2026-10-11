@@ -41,8 +41,8 @@ $changeThresholdInMinutes = empty($_GET['threshold']) ? 1 : intval($_GET['thresh
   <body class="m-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">OTP report</a></li>
-        <li class="breadcrumb-item">AIR</li>
+        <li class="breadcrumb-item"><a href="index.php">OTP report</a></li>
+        <li class="breadcrumb-item"><?= htmlspecialchars($route) ?></li>
         <li class="breadcrumb-item active">proposed schedule</li>
       </ol>
     </nav>

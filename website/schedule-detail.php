@@ -32,8 +32,8 @@ $latenessByDay = $trainView->latenessByDayForTrainAndTime($latenessByTrainDayAnd
   <body class="m-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">OTP report</a></li>
-        <li class="breadcrumb-item">AIR</li>
+        <li class="breadcrumb-item"><a href="index.php">OTP report</a></li>
+        <li class="breadcrumb-item"><?= htmlspecialchars($route) ?></li>
         <li class="breadcrumb-item">train number <?= htmlspecialchars($train) ?></li>
         <li class="breadcrumb-item active">stop <?= htmlspecialchars($stop) ?></li>
       </ol>
