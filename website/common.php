@@ -342,51 +342,70 @@ class SeptaSchedule
     $this->schedule = $schedule ?? self::getWeekdayServiceId($route);
   }
 
+  # Center City stations. A trip that ends at one of these is inbound. A trip that
+  # starts at one of these is outbound. Headsign is not that test: a train that
+  # terminates at Temple University is labeled "Temple University", and a Cynwyd
+  # train that terminates at Suburban Station is labeled "Suburban Station".
+  private const TRUNK_STOPS = [
+    'Penn Medicine Station',
+    'Gray 30th St Station',
+    'Suburban Station',
+    'Jefferson Station',
+    'Temple University',
+  ];
+
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
   function getInboundTrains()
   {
-    # Previously, SEPTA GTFS did not include the Suburban Station stop both "inbound" and "outbound" directions of each
-    # train. Now they do, so we can directly filter by that.
-    $statement = self::$database->prepare(<<<SQL
-      SELECT block_id, service_id -- TRAIN NUMBER
-        FROM trips
-             NATURAL JOIN routes
-      	     NATURAL JOIN trips
-             NATURAL JOIN stop_times
-             NATURAL JOIN stops
-       WHERE route_short_name=:route_short_name
-         AND service_id=:service_id
-         AND trip_headsign = "Center City Philadelphia"
-         AND stop_name="Suburban Station"
-       ORDER BY arrival_time>"03:00:00" DESC,
-             arrival_time
-    SQL);
-    $statement->execute([':route_short_name'=>$this->route, ':service_id'=>$this->schedule]);
-    return $statement->fetchAll(PDO::FETCH_COLUMN);
+    return $this->getTrainsByTrunkEnd('DESC');
   }
 
   # Train numbers ordered by time they reach Suburban Station
   # Returns like: ['3014', '3015', ...]
   function getOutboundTrains()
   {
-    # Previously, SEPTA GTFS did not include the Suburban Station stop both "inbound" and "outbound" directions of each
-    # train. Now they do, so we can directly filter by that.
+    return $this->getTrainsByTrunkEnd('ASC');
+  }
+
+  # $sequenceOrder DESC keeps trips whose last stop is a trunk station.
+  # ASC keeps trips whose first stop is a trunk station.
+  private function getTrainsByTrunkEnd($sequenceOrder)
+  {
+    if ($sequenceOrder !== 'ASC' && $sequenceOrder !== 'DESC') {
+      throw new InvalidArgumentException('sequence order must be ASC or DESC');
+    }
+    $placeholders = implode(',', array_fill(0, count(self::TRUNK_STOPS), '?'));
     $statement = self::$database->prepare(<<<SQL
-      SELECT block_id, service_id -- TRAIN NUMBER
+      SELECT block_id -- TRAIN NUMBER
         FROM trips
-             NATURAL JOIN routes
-      	     NATURAL JOIN trips
-             NATURAL JOIN stop_times
-             NATURAL JOIN stops
-       WHERE route_short_name=:route_short_name
-         AND service_id=:service_id
-         AND trip_headsign <> "Center City Philadelphia"
-         AND stop_name="Suburban Station"
-       ORDER BY arrival_time>"03:00:00" DESC,
-             arrival_time
+             JOIN routes USING (route_id)
+       WHERE route_short_name = ?
+         AND service_id = ?
+         AND (
+              SELECT stops.stop_name
+                FROM stop_times
+                     JOIN stops USING (stop_id)
+               WHERE stop_times.trip_id = trips.trip_id
+               ORDER BY stop_sequence $sequenceOrder
+               LIMIT 1
+             ) IN ($placeholders)
+       ORDER BY (
+              SELECT arrival_time > '03:00:00'
+                FROM stop_times
+                     JOIN stops USING (stop_id)
+               WHERE stop_times.trip_id = trips.trip_id
+                 AND stop_name = 'Suburban Station'
+            ) DESC,
+            (
+              SELECT arrival_time
+                FROM stop_times
+                     JOIN stops USING (stop_id)
+               WHERE stop_times.trip_id = trips.trip_id
+                 AND stop_name = 'Suburban Station'
+            )
     SQL);
-    $statement->execute([':route_short_name'=>$this->route, ':service_id'=>$this->schedule]);
+    $statement->execute(array_merge([$this->route, $this->schedule], self::TRUNK_STOPS));
     return $statement->fetchAll(PDO::FETCH_COLUMN);
   }
 
