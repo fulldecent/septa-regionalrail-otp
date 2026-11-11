@@ -1,0 +1,5 @@
+# Markdown is linted by markdownlint.
+*.md
+# The PHP site and the filed reports stay as they are.
+website/
+SEPTA meetings and reports/

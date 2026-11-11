@@ -1,6 +1,6 @@
 # SEPTA Regional Rail On-Time Performance Report
 
-**This repository is the code for https://phor.net/apps/septa**
+**This repository is the code for [phor.net/apps/septa](https://phor.net/apps/septa)**
 
 These reports use every train's arrival time from 2008 until present to recommend schedule changes for chronically late service. Reports created by [William Entriken](http://phor.net/) (not affiliated with SEPTA). Also see SEPTA's less detailed [official OTP reports](http://www.septa.org/service/rail/otp.html).
 
@@ -25,3 +25,7 @@ I would like SEPTA to hire me on a monthly retainer to analyze and recommend cha
 ## Contributing
 
 Please send PRs for things you would like to improve. I'd be happy to review your work if you are bringing significant effort to this project.
+
+## References
+
+1. This project is built based on [best practices documented in github-pages-template](https://github.com/fulldecent/github-pages-template), commit 7f01f52a68a7480c4df8841be7fc2614d60ca930. The lint workflow checks formatting with Prettier and markdownlint. It does not use the template Yarn and Liquid setup, because this repository is not a Jekyll site.
