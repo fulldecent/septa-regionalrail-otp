@@ -28,4 +28,4 @@ Please send PRs for things you would like to improve. I'd be happy to review you
 
 ## References
 
-1. This project is built based on [best practices documented in github-pages-template](https://github.com/fulldecent/github-pages-template), commit 7f01f52a68a7480c4df8841be7fc2614d60ca930. The lint workflow checks formatting with Prettier and markdownlint. It does not use the template Yarn and Liquid setup, because this repository is not a Jekyll site.
+1. This project is built based on [best practices documented in github-pages-template](https://github.com/fulldecent/github-pages-template), release 1.9.0. The lint workflow checks formatting with Prettier and markdownlint. It does not use the template Yarn and Liquid setup, because this repository is not a Jekyll site.
